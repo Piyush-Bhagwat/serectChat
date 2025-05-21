@@ -22,7 +22,7 @@ import { context } from "@/context/context";
 export default function ChatLayout() {
     const { user, setUser } = useContext(context);
     const messagesRef = collection(db, "messages");
-    const q = query(collection(db, "messages"), orderBy("createdAt"));
+    const q = query(messagesRef, orderBy("createdAt"));
 
     useEffect(() => {
         if ("Notification" in window && Notification.permission !== "granted") {
@@ -49,10 +49,10 @@ export default function ChatLayout() {
                         Notification.permission === "granted" &&
                         document.visibilityState !== "visible" // only notify if user isn't looking at it
                     ) {
-                        new Notification(`💬 New message from ${data.sender}`, {
-                            body: data.text,
-                            requireInteraction: true,
-                        });
+                        // new Notification(`💬 New message from ${data.sender}`, {
+                        //     body: data.text,
+                        //     requireInteraction: true,
+                        // });
                         console.log("🔔 Notification triggered");
                         new Audio("./audio/recive.wav").play();
                     }
@@ -83,16 +83,35 @@ export default function ChatLayout() {
         if (bottomRef.current) {
             bottomRef.current.scrollIntoView({ behavior: "smooth" });
         }
+    }, [messagesSnapshot]);
 
-        if (messagesSnapshot) {
-            messagesSnapshot.docs.forEach((d) => {
-                const data = d.data();
+    useEffect(() => {
+        function handleVisibilityChange() {
+            if (
+                document.visibilityState === "visible" &&
+                messagesSnapshot &&
+                user
+            ) {
+                const unread = messagesSnapshot.docs.filter(
+                    (d) => !d.data().readBy?.includes(user)
+                );
+                
 
-                if (!data.readBy?.includes(user)) {
-                    updateDoc(d.ref, { readBy: arrayUnion(user) });
-                }
-            });
+                unread.forEach((doc) => {
+                    updateDoc(doc.ref, { readBy: arrayUnion(user) }).catch(
+                        (e) => console.error("Read update error:", e)
+                    );
+                });
+            }
         }
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => {
+            document.removeEventListener(
+                "visibilitychange",
+                handleVisibilityChange
+            );
+        };
     }, [messagesSnapshot, user]);
 
     async function sendMessage(text) {
@@ -139,6 +158,7 @@ export default function ChatLayout() {
                             text={data.text}
                             sender={data.sender}
                             createdAt={data.createdAt}
+                            readBy={data.readBy}
                         />
                     );
                 })}

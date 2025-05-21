@@ -1,7 +1,7 @@
 import { context } from "@/context/context";
 import { useContext } from "react";
 
-export default function MessageBubble({ text, sender = "me", createdAt }) {
+export default function MessageBubble({ text, sender = "me", createdAt, readBy }) {
     const { user } = useContext(context);
     const isMe = sender === user;
 
@@ -16,7 +16,7 @@ export default function MessageBubble({ text, sender = "me", createdAt }) {
     return (
         <div className={`flex ${isMe ? "justify-end" : "justify-start"} mb-2`}>
             <div
-                className={`px-4 py-2 rounded-xl max-w-xs text-white shadow relative ${
+                className={`${readBy?.length == 1 && isMe && "border-2 border-dashed border-neutral-400"} px-4 py-2 rounded-xl min-w-20 max-w-xs text-white shadow relative ${
                     isMe ? "bg-neutral-600" : "bg-neutral-800"
                 }`}
             >
