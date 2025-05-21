@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
+// import sendAudio from "../audio/send.mp3";
 
 import {
     collection,
@@ -10,6 +11,8 @@ import {
     query,
     orderBy,
     serverTimestamp,
+    updateDoc,
+    arrayUnion,
 } from "firebase/firestore";
 import { useCollection } from "react-firebase-hooks/firestore";
 import { db } from "@/db/firebase.config";
@@ -20,23 +23,48 @@ export default function ChatLayout() {
     const { user, setUser } = useContext(context);
     const messagesRef = collection(db, "messages");
     const q = query(collection(db, "messages"), orderBy("createdAt"));
+
+    useEffect(() => {
+        if ("Notification" in window && Notification.permission !== "granted") {
+            Notification.requestPermission().then((permission) => {
+                console.log("Notification permission:", permission);
+            });
+        }
+    }, []);
+
     useEffect(() => {
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const now = Date.now();
 
-            snapshot.docs.forEach(async (docSnap) => {
-                const data = docSnap.data();
-                const createdAt = data.createdAt?.toMillis?.();
+            snapshot.docChanges().forEach((change) => {
+                const doc = change.doc;
+                const data = doc.data();
 
-                // ✅ Skip if no timestamp
-                if (!createdAt) return;
+                if (change.type === "added") {
+                    const createdAt = data.createdAt?.toMillis?.();
 
-                const age = now - createdAt;
+                    // 👇 Trigger browser notification (not from self)
+                    if (
+                        data.sender !== user &&
+                        Notification.permission === "granted" &&
+                        document.visibilityState !== "visible" // only notify if user isn't looking at it
+                    ) {
+                        new Notification(`💬 New message from ${data.sender}`, {
+                            body: data.text,
+                            requireInteraction: true,
+                        });
+                        console.log("🔔 Notification triggered");
+                        new Audio("./audio/recive.wav").play();
+                    }
 
-                // ✅ If older than 24 hours (in ms), delete
-                if (age > 24 * 60 * 60 * 1000) {
-                    console.log("Deleting expired message:", docSnap.id);
-                    await deleteDoc(docSnap.ref);
+                    if (!createdAt) return;
+
+                    // 👇 Auto-delete check
+                    const age = now - createdAt;
+                    if (age > 24 * 60 * 60 * 1000) {
+                        deleteDoc(doc.ref);
+                        return;
+                    }
                 }
             });
         });
@@ -55,7 +83,17 @@ export default function ChatLayout() {
         if (bottomRef.current) {
             bottomRef.current.scrollIntoView({ behavior: "smooth" });
         }
-    }, [messagesSnapshot]);
+
+        if (messagesSnapshot) {
+            messagesSnapshot.docs.forEach((d) => {
+                const data = d.data();
+
+                if (!data.readBy?.includes(user)) {
+                    updateDoc(d.ref, { readBy: arrayUnion(user) });
+                }
+            });
+        }
+    }, [messagesSnapshot, user]);
 
     async function sendMessage(text) {
         if (!text.trim()) return;
@@ -67,7 +105,10 @@ export default function ChatLayout() {
                 sender: user, // you can enhance later for auth-based sender
                 createdAt: serverTimestamp(),
                 imageURL: "",
+                readBy: [user],
             });
+
+            new Audio("./audio/send.mp3").play();
         } catch (e) {
             console.error("Error sending message: ", e);
         }
