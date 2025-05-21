@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
+import { IoLogOut } from "react-icons/io5";
 // import sendAudio from "../audio/send.mp3";
 
 import {
@@ -19,6 +20,7 @@ import { db } from "@/db/firebase.config";
 import { onSnapshot, deleteDoc } from "firebase/firestore";
 import { context } from "@/context/context";
 import SOS from "./SOS";
+import { AUTO_DELETE_TIME } from "@/config";
 
 export default function ChatLayout() {
     const { user, setUser } = useContext(context);
@@ -78,8 +80,7 @@ export default function ChatLayout() {
 
             if (!readAt) return;
 
-            // 30 seconds after read, delete it
-            if (readAt && now - readAt > 30 * 60 * 1000) {
+            if (readAt && now - readAt > AUTO_DELETE_TIME * 60 * 1000) {
                 deleteDoc(d.ref);
                 return;
             }
@@ -153,16 +154,30 @@ export default function ChatLayout() {
                 <h1 className="text-lg font-bold">Chatting 🔒</h1>
                 <SOS />
                 <button
-                    className="bg-neutral-700 px-3 py-2 rounded-full cursor-alias"
+                    className="bg-neutral-700 text-xl text-white w-10 aspect-square flex justify-center items-center active:scale-95 rounded-full"
                     onClick={() => setUser(null)}
                 >
-                    Logout
+                    <IoLogOut />
                 </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-1">
-                {loading && <p>Loading messages...</p>}
-                {error && <p>Error loading messages: {error.message}</p>}
+                {loading && (
+                    <p className="text-lg font-bold text-white">
+                        Loading messages...
+                    </p>
+                )}
+                {error && (
+                    <p className="text-lg font-bold text-white">
+                        Error loading messages: {error.message}
+                    </p>
+                )}
+
+                {messagesSnapshot?.docs.length == 0 && (
+                    <h2 className="text-lg font-bold text-white">
+                        Previous Messages Auto deleted
+                    </h2>
+                )}
 
                 {messagesSnapshot?.docs.map((doc) => {
                     const data = doc.data();

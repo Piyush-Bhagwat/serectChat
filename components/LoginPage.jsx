@@ -1,4 +1,5 @@
 "use client";
+import { anuName, piName } from "@/config";
 import { context } from "@/context/context";
 import { useContext, useState } from "react";
 
@@ -39,8 +40,8 @@ export default function LoginPage() {
                         onChange={(e) => setUsername(e.target.value)}
                         className="w-full p-2 rounded bg-neutral-700"
                     >
-                        <option value="anu">Diamond💎</option>
-                        <option value="pi">Elixir ⚗️</option>
+                        <option value="anu">{anuName}</option>
+                        <option value="pi">{piName}</option>
                     </select>
                 </div>
 

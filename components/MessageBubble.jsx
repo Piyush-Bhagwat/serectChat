@@ -1,3 +1,4 @@
+import { anuName, piName } from "@/config";
 import { context } from "@/context/context";
 import { useContext } from "react";
 
@@ -38,7 +39,7 @@ export default function MessageBubble({
                         }`}
                     >
                         <span>{time} </span> |
-                        <span>{sender == "pi" ? "Exilir" : "Diamond"}</span>
+                        <span>{sender == "pi" ? piName : anuName}</span>
                     </div>
                 )}
             </div>
