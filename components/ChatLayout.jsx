@@ -128,26 +128,6 @@ export default function ChatLayout() {
         };
     }, [messagesSnapshot, user]);
 
-    async function sendMessage(text) {
-        if (!text.trim()) return;
-
-        setSending(true);
-        try {
-            await addDoc(messagesRef, {
-                text,
-                sender: user, // you can enhance later for auth-based sender
-                createdAt: serverTimestamp(),
-                imageURL: "",
-                readBy: [user],
-            });
-
-            new Audio("./audio/send.mp3").play();
-        } catch (e) {
-            console.error("Error sending message: ", e);
-        }
-        setSending(false);
-    }
-
     return (
         <div className="flex flex-col h-screen bg-neutral-900 w-full sm:w-2/3 md:w-1/2 lg:w-1/3 mx-auto shadow-xl">
             <div className="p-4 shadow flex justify-between bg-neutral-800 text-neutral-200">
@@ -188,18 +168,15 @@ export default function ChatLayout() {
                             sender={data.sender}
                             createdAt={data.createdAt}
                             readBy={data.readBy}
+                            id={doc.id}
+                            reply={data.replyMsg}
                         />
                     );
                 })}
                 <div ref={bottomRef} />
             </div>
 
-            <MessageInput
-                onSend={async (text) => {
-                    if (sending) return;
-                    await sendMessage(text);
-                }}
-            />
+            <MessageInput />
         </div>
     );
 }

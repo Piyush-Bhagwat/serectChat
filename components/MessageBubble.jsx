@@ -1,15 +1,21 @@
 import { anuName, piName } from "@/config";
 import { context } from "@/context/context";
-import { useContext } from "react";
+import { BsReplyFill } from "react-icons/bs";
+import { useContext, useEffect, useState } from "react";
+import { collection, doc, getDoc } from "firebase/firestore";
+import { db } from "@/db/firebase.config";
 
 export default function MessageBubble({
+    id,
     text,
-    sender = "me",
+    sender,
     createdAt,
     readBy,
+    reply,
 }) {
-    const { user } = useContext(context);
+    const { user, setReplyMsg } = useContext(context);
     const isMe = sender === user;
+    const [replayMessageText, setReplayMessageText] = useState(null);
 
     // Format timestamp (e.g. 9:42 PM)
     const time = createdAt
@@ -18,6 +24,25 @@ export default function MessageBubble({
               minute: "2-digit",
           })
         : "";
+
+    useEffect(() => {
+        console.log("reply", reply);
+        if (!reply) return;
+
+        
+
+        async function fetch() {
+            const ref = collection(db, "messages");
+            const dRef = doc(ref, reply);
+
+            const d = (await getDoc(dRef)).data();
+            if (!d) return;
+
+            setReplayMessageText(d.text);
+        }
+
+        fetch();
+    }, []);
 
     return (
         <div className={`flex ${isMe ? "justify-end" : "justify-start"} mb-1`}>
@@ -30,6 +55,21 @@ export default function MessageBubble({
                     isMe ? "bg-neutral-600" : "bg-neutral-800"
                 }`}
             >
+                {replayMessageText && (
+                    <div className="text-xs text-neutral-300 border-l-3 border-blue-400 pl-2 mb-1 bg-neutral-700 p-2  rounded-md opacity-80 truncate">
+                        {replayMessageText}
+                    </div>
+                )}
+                <button
+                    className={`text-neutral-200 text-xl cursor-pointer hover:scale-115 hover:opacity-100 opacity-45 active:scale-95 transition duration-75 absolute ${
+                        isMe
+                            ? "-left-2 -translate-x-full"
+                            : "-right-2 translate-x-full"
+                    }`}
+                    onClick={() => setReplyMsg(id)}
+                >
+                    <BsReplyFill />
+                </button>
                 <p className="text-sm">{text}</p>
 
                 {time && (
