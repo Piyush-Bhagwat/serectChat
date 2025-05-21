@@ -1,7 +1,12 @@
 import { context } from "@/context/context";
 import { useContext } from "react";
 
-export default function MessageBubble({ text, sender = "me", createdAt, readBy }) {
+export default function MessageBubble({
+    text,
+    sender = "me",
+    createdAt,
+    readBy,
+}) {
     const { user } = useContext(context);
     const isMe = sender === user;
 
@@ -14,21 +19,27 @@ export default function MessageBubble({ text, sender = "me", createdAt, readBy }
         : "";
 
     return (
-        <div className={`flex ${isMe ? "justify-end" : "justify-start"} mb-2`}>
+        <div className={`flex ${isMe ? "justify-end" : "justify-start"} mb-1`}>
             <div
-                className={`${readBy?.length == 1 && isMe && "border-2 border-dashed border-neutral-400"} px-4 py-2 rounded-xl min-w-20 max-w-xs text-white shadow relative ${
+                className={`${
+                    readBy?.length == 1 &&
+                    isMe &&
+                    "border-2 border-dashed border-neutral-400"
+                } px-3 py-1.5 rounded-xl min-w-20 max-w-xs text-white shadow relative ${
                     isMe ? "bg-neutral-600" : "bg-neutral-800"
                 }`}
             >
                 <p className="text-sm">{text}</p>
+
                 {time && (
-                    <span
-                        className={`text-xs text-neutral-400 absolute -bottom-6 ${
-                            isMe ? "right-2" : "left-2"
+                    <div
+                        className={`mt-1 flex gap-1 text-xs text-neutral-400 ${
+                            isMe ? "justify-end" : "justify-start"
                         }`}
                     >
-                        {time}
-                    </span>
+                        <span>{time} </span> |
+                        <span>{sender == "pi" ? "Exilir" : "Diamond"}</span>
+                    </div>
                 )}
             </div>
         </div>
