@@ -86,26 +86,37 @@ export default function ChatLayout() {
     }, [messagesSnapshot]);
 
     useEffect(() => {
-        function handleVisibilityChange() {
+        const markMessagesAsRead = () => {
             if (
-                document.visibilityState === "visible" &&
-                messagesSnapshot &&
-                user
-            ) {
-                const unread = messagesSnapshot.docs.filter(
-                    (d) => !d.data().readBy?.includes(user)
-                );
-                
+                !messagesSnapshot ||
+                !user ||
+                document.visibilityState !== "visible"
+            )
+                return;
 
-                unread.forEach((doc) => {
-                    updateDoc(doc.ref, { readBy: arrayUnion(user) }).catch(
-                        (e) => console.error("Read update error:", e)
-                    );
-                });
+            const unread = messagesSnapshot.docs.filter(
+                (d) => !d.data().readBy?.includes(user)
+            );
+
+            unread.forEach((doc) => {
+                updateDoc(doc.ref, { readBy: arrayUnion(user) }).catch((e) =>
+                    console.error("Read update error:", e)
+                );
+            });
+        };
+
+        // Call immediately if tab is visible and messages are loaded
+        markMessagesAsRead();
+
+        // Attach visibility change listener
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                markMessagesAsRead();
             }
-        }
+        };
 
         document.addEventListener("visibilitychange", handleVisibilityChange);
+
         return () => {
             document.removeEventListener(
                 "visibilitychange",
