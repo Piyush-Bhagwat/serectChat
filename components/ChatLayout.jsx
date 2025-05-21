@@ -18,6 +18,7 @@ import { useCollection } from "react-firebase-hooks/firestore";
 import { db } from "@/db/firebase.config";
 import { onSnapshot, deleteDoc } from "firebase/firestore";
 import { context } from "@/context/context";
+import SOS from "./SOS";
 
 export default function ChatLayout() {
     const { user, setUser } = useContext(context);
@@ -149,6 +150,7 @@ export default function ChatLayout() {
         <div className="flex flex-col h-screen bg-neutral-900 w-full sm:w-2/3 md:w-1/2 lg:w-1/3 mx-auto shadow-xl">
             <div className="p-4 shadow flex justify-between bg-neutral-800 text-neutral-200">
                 <h1 className="text-lg font-bold">Chatting 🔒</h1>
+                <SOS />
                 <button
                     className="bg-neutral-700 px-3 py-2 rounded-full cursor-alias"
                     onClick={() => setUser(null)}
