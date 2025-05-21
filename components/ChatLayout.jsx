@@ -35,8 +35,6 @@ export default function ChatLayout() {
 
     useEffect(() => {
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const now = Date.now();
-
             snapshot.docChanges().forEach((change) => {
                 const doc = change.doc;
                 const data = doc.data();
@@ -50,21 +48,8 @@ export default function ChatLayout() {
                         Notification.permission === "granted" &&
                         document.visibilityState !== "visible" // only notify if user isn't looking at it
                     ) {
-                        // new Notification(`💬 New message from ${data.sender}`, {
-                        //     body: data.text,
-                        //     requireInteraction: true,
-                        // });
                         console.log("🔔 Notification triggered");
                         new Audio("./audio/recive.wav").play();
-                    }
-
-                    if (!createdAt) return;
-
-                    // 👇 Auto-delete check
-                    const age = now - createdAt;
-                    if (age > 24 * 60 * 60 * 1000) {
-                        deleteDoc(doc.ref);
-                        return;
                     }
                 }
             });
@@ -84,6 +69,21 @@ export default function ChatLayout() {
         if (bottomRef.current) {
             bottomRef.current.scrollIntoView({ behavior: "smooth" });
         }
+
+        messagesSnapshot?.docs.map((d) => {
+            const now = Date.now();
+
+            const data = d.data();
+            const readAt = data.readAt?.toMillis?.();
+
+            if (!readAt) return;
+
+            // 30 seconds after read, delete it
+            if (readAt && now - readAt > 30 * 60 * 1000) {
+                deleteDoc(d.ref);
+                return;
+            }
+        });
     }, [messagesSnapshot]);
 
     useEffect(() => {
@@ -100,9 +100,10 @@ export default function ChatLayout() {
             );
 
             unread.forEach((doc) => {
-                updateDoc(doc.ref, { readBy: arrayUnion(user) }).catch((e) =>
-                    console.error("Read update error:", e)
-                );
+                updateDoc(doc.ref, {
+                    readBy: arrayUnion(user),
+                    readAt: serverTimestamp(),
+                }).catch((e) => console.error("Read update error:", e));
             });
         };
 
