@@ -97,6 +97,7 @@ export default function ChatLayout() {
                             key={doc.id}
                             text={data.text}
                             sender={data.sender}
+                            createdAt={data.createdAt}
                         />
                     );
                 })}
