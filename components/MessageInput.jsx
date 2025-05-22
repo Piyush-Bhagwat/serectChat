@@ -23,6 +23,7 @@ export default function MessageInput() {
     const [uploadLoading, setUploadLoading] = useState(false);
 
     const [image, setImage] = useState(null);
+    const [imageId, setImageId] = useState(null);
 
     const handleEmojiClick = (emojiData) => {
         setMessage((prev) => prev + emojiData.emoji);
@@ -30,8 +31,28 @@ export default function MessageInput() {
 
     const fileInputRef = useRef(null);
 
+    const handleDeleteImage = async () => {
+        if (!imageId) return;
+
+        try {
+            await fetch("/api/delete-image", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ public_id: imageId }),
+            });
+
+            setImageURL(null);
+            setImageId(null);
+            setImage(null);
+        } catch (e) {
+            alert("Failed to delete image");
+        }
+    };
+
     async function sendMessage(text) {
-        if (!text.trim()) return;
+        if (!text.trim() && !imageURL) return;
 
         setSending(true);
         try {
@@ -40,6 +61,7 @@ export default function MessageInput() {
                 sender: user,
                 createdAt: serverTimestamp(),
                 imageURL,
+                imageId,
                 readBy: [user],
                 replyMsg,
             });
@@ -52,7 +74,7 @@ export default function MessageInput() {
     }
 
     const sendHandler = async () => {
-        if (sending) return;
+        if (sending || uploadLoading) return;
         await sendMessage(message);
         setMessage("");
         setReplyMsg(null);
@@ -60,7 +82,8 @@ export default function MessageInput() {
         setImageURL(null);
     };
 
-    const cancelImage = () => {
+    const cancelImage = async () => {
+        await handleDeleteImage()
         setImage(null);
         setImageURL(null);
     };
@@ -74,8 +97,9 @@ export default function MessageInput() {
         setImage(obj);
         setUploadLoading(true);
         try {
-            const url = await uploadImageToCloudinary(file);
+            const { url, id } = await uploadImageToCloudinary(file);
             setImageURL(url);
+            setImageId(id);
         } catch (e) {
             console.log("Error uploading file", e);
             alert("Error uplaoding image");

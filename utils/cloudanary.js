@@ -14,7 +14,7 @@ async function uploadImageToCloudinary(file) {
     );
 
     const data = await res.json();
-    return data.secure_url; // use this URL in your message
+    return {url: data.secure_url, id: data.public_id}; // use this URL in your message
 }
 
 export {uploadImageToCloudinary}

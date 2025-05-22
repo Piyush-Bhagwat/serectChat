@@ -66,13 +66,33 @@ export default function ChatLayout() {
     const [sending, setSending] = useState(false);
     const bottomRef = useRef(null);
 
+    const handleDeleteImage = async (imageId) => {
+        if (!imageId) return;
+
+        try {
+            await fetch("/api/delete-image", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ public_id: imageId }),
+            });
+
+            setImageURL(null);
+            setImageId(null);
+            setImage(null);
+        } catch (e) {
+            alert("Failed to delete image");
+        }
+    };
+
     // Scroll to bottom on new messages
     useEffect(() => {
         if (bottomRef.current) {
             bottomRef.current.scrollIntoView({ behavior: "smooth" });
         }
 
-        messagesSnapshot?.docs.map((d) => {
+        messagesSnapshot?.docs.map(async (d) => {
             const now = Date.now();
 
             const data = d.data();
@@ -81,7 +101,10 @@ export default function ChatLayout() {
             if (!readAt) return;
 
             if (readAt && now - readAt > AUTO_DELETE_TIME * 60 * 1000) {
-                deleteDoc(d.ref);
+                if(d.imageId){
+                   await handleDeleteImage(d.imageId)
+                }
+                await deleteDoc(d.ref);
                 return;
             }
         });
