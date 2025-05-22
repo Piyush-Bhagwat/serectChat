@@ -32,17 +32,34 @@ export default function LoginPage() {
                     Chat Login 🔒
                 </h2>
 
-                {/* Username Dropdown */}
+                {/* Username Radio Buttons */}
                 <div>
                     <label className="block mb-1">Select User</label>
-                    <select
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        className="w-full p-2 rounded bg-neutral-700"
-                    >
-                        <option value="anu">{anuName}</option>
-                        <option value="pi">{piName}</option>
-                    </select>
+                    <div className="space-y-2">
+                        <label className="flex items-center gap-2">
+                            <input
+                                type="radio"
+                                name="username"
+                                value="anu"
+                                checked={username === "anu"}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className="accent-blue-500"
+                            />
+                            <span>{anuName}</span>
+                        </label>
+
+                        <label className="flex items-center gap-2">
+                            <input
+                                type="radio"
+                                name="username"
+                                value="pi"
+                                checked={username === "pi"}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className="accent-blue-500"
+                            />
+                            <span>{piName}</span>
+                        </label>
+                    </div>
                 </div>
 
                 {/* Password Field */}
