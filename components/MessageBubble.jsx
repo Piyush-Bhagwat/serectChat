@@ -1,9 +1,11 @@
 import { anuName, piName } from "@/config";
 import { context } from "@/context/context";
 import { BsReplyFill } from "react-icons/bs";
+import {FiDownload} from "react-icons/fi"
 import { useContext, useEffect, useState } from "react";
 import { collection, doc, getDoc } from "firebase/firestore";
 import { db } from "@/db/firebase.config";
+import Image from "next/image";
 
 export default function MessageBubble({
     id,
@@ -12,6 +14,7 @@ export default function MessageBubble({
     createdAt,
     readBy,
     reply,
+    imageURL,
 }) {
     const { user, setReplyMsg } = useContext(context);
     const isMe = sender === user;
@@ -38,6 +41,26 @@ export default function MessageBubble({
                 {reply && (
                     <div className="text-xs text-neutral-300 border-l-3 border-blue-400 pl-2 mb-1 bg-neutral-700 p-2  rounded-md opacity-80 truncate">
                         {reply}
+                    </div>
+                )}
+
+                {/* Image with download */}
+                {imageURL && (
+                    <div className="relative w-full overflow-hidden rounded-lg mb-2 group">
+                        <img
+                            src={imageURL}
+                            alt="Sent image"
+                            className="rounded-lg w-full h-auto max-h-72 object-cover"
+                        />
+                        <a
+                            href={imageURL}
+                            download
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute top-1 right-1 p-1 rounded-full bg-black/60 text-white text-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                        >
+                            <FiDownload />
+                        </a>
                     </div>
                 )}
                 <button

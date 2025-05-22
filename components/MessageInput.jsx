@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { IoImage, IoSend } from "react-icons/io5";
 import EmojiPicker from "emoji-picker-react";
 import { FaFaceSmile } from "react-icons/fa6";
@@ -11,16 +11,24 @@ import {
     serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/db/firebase.config";
+import { uploadImageToCloudinary } from "@/utils/cloudanary";
+import Image from "next/image";
 
 export default function MessageInput() {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [message, setMessage] = useState("");
     const { replyMsg, user, setReplyMsg } = useContext(context);
     const [sending, setSending] = useState(false);
+    const [imageURL, setImageURL] = useState(null);
+    const [uploadLoading, setUploadLoading] = useState(false);
+
+    const [image, setImage] = useState(null);
 
     const handleEmojiClick = (emojiData) => {
         setMessage((prev) => prev + emojiData.emoji);
     };
+
+    const fileInputRef = useRef(null);
 
     async function sendMessage(text) {
         if (!text.trim()) return;
@@ -29,9 +37,9 @@ export default function MessageInput() {
         try {
             await addDoc(collection(db, "messages"), {
                 text,
-                sender: user, 
+                sender: user,
                 createdAt: serverTimestamp(),
-                imageURL: "",
+                imageURL,
                 readBy: [user],
                 replyMsg,
             });
@@ -48,6 +56,32 @@ export default function MessageInput() {
         await sendMessage(message);
         setMessage("");
         setReplyMsg(null);
+        setImage(null);
+        setImageURL(null);
+    };
+
+    const cancelImage = () => {
+        setImage(null);
+        setImageURL(null);
+    };
+
+    const handleFileChange = async (e) => {
+        if (imageURL) return alert("Image already selected");
+        const file = e.target.files[0];
+        const obj = URL.createObjectURL(file);
+        console.log(obj);
+
+        setImage(obj);
+        setUploadLoading(true);
+        try {
+            const url = await uploadImageToCloudinary(file);
+            setImageURL(url);
+        } catch (e) {
+            console.log("Error uploading file", e);
+            alert("Error uplaoding image");
+        }
+        setUploadLoading(false);
+        console.log("Image selected");
     };
 
     return (
@@ -60,6 +94,28 @@ export default function MessageInput() {
                         height={350}
                         width={300}
                     />
+                </div>
+            )}
+
+            {image && (
+                <div className="relative w-40 h-auto mb-2 ml-2">
+                    <img
+                        src={image}
+                        alt="Preview"
+                        className="rounded-lg w-full max-h-40 object-cover"
+                    />
+                    <button
+                        className="absolute top-1 right-1 text-sm bg-black/70 rounded-full px-2 text-white hover:bg-red-600"
+                        onClick={cancelImage}
+                        title="Cancel image"
+                    >
+                        ×
+                    </button>
+                    {uploadLoading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white text-sm font-medium rounded-lg">
+                            Uploading...
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -90,10 +146,19 @@ export default function MessageInput() {
                     <FaFaceSmile />
                 </button>
 
+                {/* Hidden File Input */}
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handleFileChange}
+                />
+
                 {/* Image Upload Button */}
                 <button
                     className="text-xl bg-neutral-700 cursor-pointer text-white w-10 aspect-square flex justify-center items-center active:scale-95 rounded-full"
-                    onClick={() => alert("kaam nai krta ruk")}
+                    onClick={() => fileInputRef.current.click()}
                 >
                     <IoImage />
                 </button>

@@ -170,6 +170,7 @@ export default function ChatLayout() {
                             readBy={data.readBy}
                             id={doc.id}
                             reply={data.replyMsg}
+                            imageURL={data.imageURL}
                         />
                     );
                 })}
