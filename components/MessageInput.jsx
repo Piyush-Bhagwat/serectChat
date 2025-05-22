@@ -15,7 +15,6 @@ import { db } from "@/db/firebase.config";
 export default function MessageInput() {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [message, setMessage] = useState("");
-    const [replayMessageText, setReplayMessageText] = useState(null);
     const { replyMsg, user, setReplyMsg } = useContext(context);
     const [sending, setSending] = useState(false);
 
@@ -30,7 +29,7 @@ export default function MessageInput() {
         try {
             await addDoc(collection(db, "messages"), {
                 text,
-                sender: user, // you can enhance later for auth-based sender
+                sender: user, 
                 createdAt: serverTimestamp(),
                 imageURL: "",
                 readBy: [user],
@@ -51,24 +50,6 @@ export default function MessageInput() {
         setReplyMsg(null);
     };
 
-    useEffect(() => {
-        console.log(replyMsg);
-
-        if (!replyMsg) return;
-
-        async function fetch() {
-            const ref = collection(db, "messages");
-            const dRef = doc(ref, replyMsg);
-
-            const d = (await getDoc(dRef)).data();
-            if (!d) return;
-
-            setReplayMessageText(d.text);
-        }
-
-        fetch();
-    }, [replyMsg]);
-
     return (
         <div className="relative mb-2">
             {showEmojiPicker && (
@@ -82,18 +63,18 @@ export default function MessageInput() {
                 </div>
             )}
 
-            {replayMessageText && (
+            {replyMsg && (
                 <div className="bg-neutral-800 px-4 py-2 border-l-4 border-blue-500 rounded-t-md mb-1 mx-2 relative">
                     <div className="text-xs text-blue-400 font-semibold">
                         Replying to
                     </div>
                     <div className="text-sm text-white truncate pr-6">
-                        {replayMessageText}
+                        {replyMsg}
                     </div>
 
                     <button
                         className="absolute top-1 right-2 text-neutral-400 hover:text-red-400 text-lg"
-                        onClick={() => setReplayMessageText(null)}
+                        onClick={() => setReplyMsg(null)}
                     >
                         ×
                     </button>
