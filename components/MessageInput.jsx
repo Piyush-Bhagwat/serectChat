@@ -34,6 +34,8 @@ export default function MessageInput() {
     const handleDeleteImage = async () => {
         if (!imageId) return;
 
+        console.log("imageId", imageId);
+
         try {
             await fetch("/api/delete-image", {
                 method: "POST",
@@ -83,7 +85,7 @@ export default function MessageInput() {
     };
 
     const cancelImage = async () => {
-        await handleDeleteImage()
+        await handleDeleteImage();
         setImage(null);
         setImageURL(null);
     };

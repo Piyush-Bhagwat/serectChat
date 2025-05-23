@@ -23,7 +23,7 @@ import SOS from "./SOS";
 import { AUTO_DELETE_TIME } from "@/config";
 
 export default function ChatLayout() {
-    const { user, setUser } = useContext(context);
+    const { user, setUser, logout } = useContext(context);
     const messagesRef = collection(db, "messages");
     const q = query(messagesRef, orderBy("createdAt"));
 
@@ -63,7 +63,6 @@ export default function ChatLayout() {
     // Listen to messages in real time
     const [messagesSnapshot, loading, error] = useCollection(q);
 
-    const [sending, setSending] = useState(false);
     const bottomRef = useRef(null);
 
     const handleDeleteImage = async (imageId) => {
@@ -79,7 +78,6 @@ export default function ChatLayout() {
             });
 
             setImageURL(null);
-            setImageId(null);
             setImage(null);
         } catch (e) {
             alert("Failed to delete image");
@@ -92,22 +90,30 @@ export default function ChatLayout() {
             bottomRef.current.scrollIntoView({ behavior: "smooth" });
         }
 
-        messagesSnapshot?.docs.map(async (d) => {
-            const now = Date.now();
+        const cleanOldMessages = async () => {
+            if (!messagesSnapshot) return;
 
-            const data = d.data();
-            const readAt = data.readAt?.toMillis?.();
+            const tasks = messagesSnapshot.docs.map(async (d) => {
+                //collecting all the promises and running then once
+                const now = Date.now();
+                const data = d.data();
+                const readAt = data.readAt?.toMillis?.();
 
-            if (!readAt) return;
+                if (!readAt) return;
 
-            if (readAt && now - readAt > AUTO_DELETE_TIME * 60 * 1000) {
-                if(d.imageId){
-                   await handleDeleteImage(d.imageId)
+                const expired = now - readAt > AUTO_DELETE_TIME * 60 * 1000;
+                if (expired) {
+                    if (data.imageId) {
+                        await handleDeleteImage(data.imageId);
+                    }
+                    await deleteDoc(d.ref);
                 }
-                await deleteDoc(d.ref);
-                return;
-            }
-        });
+            });
+
+            await Promise.all(tasks);
+        };
+
+        cleanOldMessages();
     }, [messagesSnapshot]);
 
     useEffect(() => {
@@ -158,7 +164,7 @@ export default function ChatLayout() {
                 <SOS />
                 <button
                     className="bg-neutral-700 text-xl text-white w-10 aspect-square flex justify-center items-center active:scale-95 rounded-full"
-                    onClick={() => setUser(null)}
+                    onClick={logout}
                 >
                     <IoLogOut />
                 </button>
