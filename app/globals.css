@@ -2,3 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 @import "tailwindcss";
+
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  background-color: #111827; /* matches theme */
+}
+
