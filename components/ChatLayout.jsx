@@ -158,7 +158,7 @@ export default function ChatLayout() {
     }, [messagesSnapshot, user]);
 
     return (
-        <div className="flex flex-col h-screen relative bg-neutral-900 sm:w-2/3 md:w-1/2 lg:w-1/3 mx-auto shadow-xl">
+        <div className="flex flex-col h-screen relative bg-neutral-900 w-full sm:w-2/3 md:w-1/2 lg:w-1/3 mx-auto shadow-xl">
             <header className="p-3 sticky top-0 w-full z-50 shadow flex justify-between bg-neutral-800 text-neutral-200">
                 <h1 className="text-lg font-bold">Chatting 🔒</h1>
                 <SOS />

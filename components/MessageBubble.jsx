@@ -34,7 +34,7 @@ export default function MessageBubble({
                     readBy?.length == 1 &&
                     isMe &&
                     "border-2 border-dashed border-neutral-400"
-                } px-3 py-1.5 rounded-xl min-w-20 max-w-xs text-white shadow relative ${
+                } px-3 py-1.5 rounded-xl min-w-20 max-w-[80%] md:max-w-xs text-white shadow relative ${
                     isMe ? "bg-neutral-600" : "bg-neutral-800"
                 }`}
             >
