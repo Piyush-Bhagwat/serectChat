@@ -13,6 +13,7 @@ import {
 import { db } from "@/db/firebase.config";
 import { uploadImageToCloudinary } from "@/utils/cloudanary";
 import Image from "next/image";
+import Spinner from "./Spinner";
 
 export default function MessageInput() {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -21,6 +22,7 @@ export default function MessageInput() {
     const [sending, setSending] = useState(false);
     const [imageURL, setImageURL] = useState(null);
     const [uploadLoading, setUploadLoading] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
 
     const [image, setImage] = useState(null);
     const [imageId, setImageId] = useState(null);
@@ -34,8 +36,10 @@ export default function MessageInput() {
     const handleDeleteImage = async () => {
         if (!imageId) return;
 
+        setDeleteLoading(true);
+        
         console.log("imageId", imageId);
-
+        
         try {
             await fetch("/api/delete-image", {
                 method: "POST",
@@ -44,13 +48,14 @@ export default function MessageInput() {
                 },
                 body: JSON.stringify({ public_id: imageId }),
             });
-
+            
             setImageURL(null);
             setImageId(null);
             setImage(null);
         } catch (e) {
             alert("Failed to delete image");
         }
+        setDeleteLoading(false);
     };
 
     async function sendMessage(text) {
@@ -82,12 +87,14 @@ export default function MessageInput() {
         setReplyMsg(null);
         setImage(null);
         setImageURL(null);
+        setImageId(null);
     };
 
     const cancelImage = async () => {
         await handleDeleteImage();
         setImage(null);
         setImageURL(null);
+        setImageId(null);
     };
 
     const handleFileChange = async (e) => {
@@ -124,22 +131,22 @@ export default function MessageInput() {
             )}
 
             {image && (
-                <div className="relative w-40 h-auto mb-2 ml-2">
+                <div className="relative w-20 h-auto mb-2 ml-2">
                     <img
                         src={image}
                         alt="Preview"
-                        className="rounded-lg w-full max-h-40 object-cover"
+                        className="rounded-lg aspect-square max-h-20 object-cover"
                     />
                     <button
-                        className="absolute top-1 right-1 text-sm bg-black/70 rounded-full px-2 text-white hover:bg-red-600"
+                        className="absolute top-1 right-1 text-sm outline outline-neutral-500 outline-solid bg-black/70 rounded-full w-5 aspect-square flex justify-center items-center text-white hover:bg-red-600"
                         onClick={cancelImage}
                         title="Cancel image"
                     >
                         ×
                     </button>
-                    {uploadLoading && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white text-sm font-medium rounded-lg">
-                            Uploading...
+                    {(uploadLoading || deleteLoading) && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white text-xl font-medium rounded-lg">
+                            <Spinner />
                         </div>
                     )}
                 </div>
@@ -178,6 +185,8 @@ export default function MessageInput() {
                     type="file"
                     accept="image/*"
                     hidden
+                    autoComplete="false"
+                    autoFocus="true"
                     onChange={handleFileChange}
                 />
 
@@ -207,9 +216,11 @@ export default function MessageInput() {
                 {/* Send Button */}
                 <button
                     onClick={sendHandler}
-                    className="bg-neutral-700 text-lg text-white w-10 aspect-square flex justify-center cursor-pointer items-center active:scale-95 rounded-full"
+                    className={`${
+                        sending ? "bg-neutral-800 text-lg" : "bg-neutral-700"
+                    } text-white w-10 aspect-square flex justify-center cursor-pointer items-center active:scale-95 rounded-full`}
                 >
-                    <IoSend />
+                    {sending ? <Spinner /> : <IoSend />}
                 </button>
             </div>
         </div>

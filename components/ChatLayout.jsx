@@ -80,7 +80,7 @@ export default function ChatLayout() {
             setImageURL(null);
             setImage(null);
         } catch (e) {
-            alert("Failed to delete image");
+            console.log("Failed to delete image");
         }
     };
 
@@ -104,6 +104,12 @@ export default function ChatLayout() {
                 const expired = now - readAt > AUTO_DELETE_TIME * 60 * 1000;
                 if (expired) {
                     if (data.imageId) {
+                        console.log(
+                            "Deleting image...",
+                            data.text,
+                            "id: ",
+                            data.imageId
+                        );
                         await handleDeleteImage(data.imageId);
                     }
                     await deleteDoc(d.ref);

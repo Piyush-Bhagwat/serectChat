@@ -1,11 +1,12 @@
 import { anuName, piName } from "@/config";
 import { context } from "@/context/context";
 import { BsReplyFill } from "react-icons/bs";
-import {FiDownload} from "react-icons/fi"
+import { FiDownload } from "react-icons/fi";
 import { useContext, useEffect, useState } from "react";
 import { collection, doc, getDoc } from "firebase/firestore";
 import { db } from "@/db/firebase.config";
 import Image from "next/image";
+import Spinner from "./Spinner";
 
 export default function MessageBubble({
     id,
@@ -38,6 +39,7 @@ export default function MessageBubble({
                     isMe ? "bg-neutral-600" : "bg-neutral-800"
                 }`}
             >
+                {!time && <Spinner />}
                 {reply && (
                     <div className="text-xs text-neutral-300 border-l-3 border-blue-400 pl-2 mb-1 bg-neutral-700 p-2  rounded-md opacity-80 truncate">
                         {reply}
