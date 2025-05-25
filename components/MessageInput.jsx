@@ -37,9 +37,9 @@ export default function MessageInput() {
         if (!imageId) return;
 
         setDeleteLoading(true);
-        
+
         console.log("imageId", imageId);
-        
+
         try {
             await fetch("/api/delete-image", {
                 method: "POST",
@@ -48,7 +48,7 @@ export default function MessageInput() {
                 },
                 body: JSON.stringify({ public_id: imageId }),
             });
-            
+
             setImageURL(null);
             setImageId(null);
             setImage(null);
@@ -58,36 +58,39 @@ export default function MessageInput() {
         setDeleteLoading(false);
     };
 
-    async function sendMessage(text) {
-        if (!text.trim() && !imageURL) return;
+    async function sendMessage(data) {
+        if (!data.text.trim() && !data.imageURL) return;
 
-        setSending(true);
+        // setSending(true);
         try {
-            await addDoc(collection(db, "messages"), {
-                text,
-                sender: user,
-                createdAt: serverTimestamp(),
-                imageURL,
-                imageId,
-                readBy: [user],
-                replyMsg,
-            });
+            await addDoc(collection(db, "messages"), data);
 
             new Audio("./audio/send.mp3").play();
         } catch (e) {
             console.error("Error sending message: ", e);
         }
-        setSending(false);
+        // setSending(false);
     }
 
     const sendHandler = async () => {
         if (sending || uploadLoading) return;
-        await sendMessage(message);
+        const data = {
+            text: message,
+            sender: user,
+            createdAt: serverTimestamp(),
+            imageURL,
+            imageId,
+            readBy: [user],
+            replyMsg,
+        };
+
         setMessage("");
         setReplyMsg(null);
         setImage(null);
         setImageURL(null);
         setImageId(null);
+        
+        await sendMessage(data);
     };
 
     const cancelImage = async () => {

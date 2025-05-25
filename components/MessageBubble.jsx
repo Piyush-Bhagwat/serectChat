@@ -39,7 +39,6 @@ export default function MessageBubble({
                     isMe ? "bg-neutral-600" : "bg-neutral-800"
                 }`}
             >
-                {!time && <Spinner />}
                 {reply && (
                     <div className="text-xs text-neutral-300 border-l-3 border-blue-400 pl-2 mb-1 bg-neutral-700 p-2  rounded-md opacity-80 truncate">
                         {reply}
@@ -77,7 +76,7 @@ export default function MessageBubble({
                 </button>
                 <p className="text-sm">{text}</p>
 
-                {time && (
+                {time ? (
                     <div
                         className={`mt-1 flex gap-1 text-xs text-neutral-400 ${
                             isMe ? "justify-end" : "justify-start"
@@ -86,6 +85,11 @@ export default function MessageBubble({
                         <span>{time} </span> |
                         <span>{sender == "pi" ? piName : anuName}</span>
                     </div>
+                ) : (
+                    <span className="text-xs flex items-center gap-2"> 
+                        
+                        <Spinner /> Sending... {" "}
+                    </span>
                 )}
             </div>
         </div>
