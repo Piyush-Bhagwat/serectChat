@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useContext } from "react";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
 import { IoLogOut } from "react-icons/io5";
+import { format } from 'date-fns';
 // import sendAudio from "../audio/send.mp3";
 
 import {
@@ -26,6 +27,8 @@ export default function ChatLayout() {
     const { user, setUser, logout } = useContext(context);
     const messagesRef = collection(db, "messages");
     const q = query(messagesRef, orderBy("createdAt"));
+
+    const [messages, setMessages] = useState([]);
 
     useEffect(() => {
         if ("Notification" in window && Notification.permission !== "granted") {
@@ -64,6 +67,39 @@ export default function ChatLayout() {
     const [messagesSnapshot, loading, error] = useCollection(q);
 
     const bottomRef = useRef(null);
+
+    useEffect(() => {
+        if (messagesSnapshot && messagesSnapshot.docs.length > 0) {
+            const groupedMessages = messagesSnapshot?.docs.reduce((acc, doc) => {
+                const data = doc.data();
+                const dateStr = format(data.createdAt?.toDate() || new Date(), 'd MMMM yyyy'); // e.g., "6 June 2025"
+
+                if (!acc[dateStr]) {
+                    acc[dateStr] = [];
+                }
+
+                acc[dateStr].push({
+                    id: doc.id,
+                    ...data,
+                });
+
+                return acc;
+            }, {});
+
+            // Convert the grouped object into an array of { date, messages }   
+            const groupedArray = Object.entries(groupedMessages).map(
+                ([date, messages]) => ({
+                    date,
+                    messages,
+                })
+            );
+
+            console.log("groupedArray", groupedArray);
+
+
+            setMessages(groupedArray);
+        }
+    }, [messagesSnapshot]);
 
     const handleDeleteImage = async (imageId) => {
         if (!imageId) return;
@@ -194,21 +230,34 @@ export default function ChatLayout() {
                     </h2>
                 )}
 
-                {messagesSnapshot?.docs.map((doc) => {
-                    const data = doc.data();
+                {messages?.map((doc) => {
+                    const { date, messages } = doc;
+
                     return (
-                        <MessageBubble
-                            key={doc.id}
-                            text={data.text}
-                            sender={data.sender}
-                            createdAt={data.createdAt}
-                            readBy={data.readBy}
-                            id={doc.id}
-                            reply={data.replyMsg}
-                            imageURL={data.imageURL}
-                        />
+                        <div key={date}>
+                            {/* Date header */}
+                            <div className="text-center my-4 sticky top-0 z-40 text-neutral-200 font-thin text-sm bg-neutral-800
+                            w-fit px-2 py-1 rounded-full mx-auto">
+                                {date}
+                            </div>
+
+                            {/* Messages of that date */}
+                            {messages.map((message) => (
+                                <MessageBubble
+                                    key={message.id}
+                                    text={message.text}
+                                    sender={message.sender}
+                                    createdAt={message.createdAt}
+                                    readBy={message.readBy}
+                                    id={message.id}
+                                    reply={message.replyMsg}
+                                    imageURL={message.imageURL}
+                                />
+                            ))}
+                        </div>
                     );
                 })}
+
                 <div ref={bottomRef} />
             </div>
 
